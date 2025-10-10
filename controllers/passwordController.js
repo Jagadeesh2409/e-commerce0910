@@ -35,16 +35,18 @@ const forgotPassword = async (req, res) => {
 const bcrypt = require("bcrypt");
 
 const resetPassword = async (req, res) => {
-  const { email, otp, newPassword } = req.body;
+  const { email, otp, newPassword, newPassword2 } = req.body;
 
-  if (!email || !otp || !newPassword) {
+  if (!email || !otp || !newPassword || !newPassword2) {
     return res.status(400).json({ message: "All fields are required" });
   }
-
+  if (newPassword !== newPassword2) {
+    return res.status(400).json({ message: "Passwords do not match" });
+  }
   try {
     const user = await knex("users")
-      .where({ email, reset_otp: otp })
-      .andWhere("reset_otp_expires", ">", new Date())
+      .where({ email, reset_token: otp })
+      .andWhere("reset_token_expires", ">", new Date())
       .first();
 
     if (!user) {
@@ -55,8 +57,8 @@ const resetPassword = async (req, res) => {
 
     await knex("users").where({ id: user.id }).update({
       password_hash: hashedPassword,
-      reset_otp: null,
-      reset_otp_expires: null,
+      reset_token: null,
+      reset_token_expires: null,
     });
 
     res.json({ message: "Password reset successfully" });
