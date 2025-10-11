@@ -1,0 +1,47 @@
+const knex = require("../db/knexConfig");
+const {
+  SucessResponse,
+  ErrorResponse,
+  responsesMessages,
+} = require("../utils/responses");
+
+function slugify(text) {
+  return text
+    .toString()
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^\w\-]+/g, "")
+    .replace(/\-\-+/g, "-")
+    .replace(/^-+/, "")
+    .replace(/-+$/, "");
+}
+
+const addProductCategories = async (req, res) => {
+  const { name } = req.body;
+
+  if (!name) {
+    ErrorResponse(res, "categorie name required ");
+    return;
+  }
+  const slug = slugify(name);
+  try {
+    const categories = await knex("categories").insert({ name, slug });
+    SucessResponse(res, categories, "The categories added to the table");
+  } catch (error) {
+    ErrorResponse(res, "Error in categories add", 400);
+    console.log("Error in addproductCategories");
+  }
+};
+
+const removeCategoriesById = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const remove = await knex("categories").where({ id }).del();
+    SucessResponse(res, remove, "removed categories from the table");
+  } catch (error) {
+    ErrorResponse(res, "failed in ");
+    console.log("Error in categories remove");
+  }
+};

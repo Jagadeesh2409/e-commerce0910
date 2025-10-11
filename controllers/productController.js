@@ -84,7 +84,7 @@ const getProductById = async (req, res) => {
       ErrorResponse(res, "Product not found", 404);
       return;
     }
-    SucessResponse(res, null, "Product got successfully");
+    SucessResponse(res, get, "Product got successfully");
   } catch (error) {
     console.error("Error got product:", error);
     ErrorResponse(res, "Internal server error", 500);
@@ -98,7 +98,7 @@ const getAllProducts = async (req, res) => {
       ErrorResponse(res, "Product not found", 404);
       return;
     }
-    SucessResponse(res, null, "Product fetching successfully");
+    SucessResponse(res, fetch, "Product fetching successfully");
   } catch (error) {
     console.error("Error fetch product:", error);
     ErrorResponse(res, "Internal server error", 500);
