@@ -6,6 +6,8 @@ exports.up = function (knex) {
     table.string("password_hash", 255).notNullable();
     table.string("phone_number", 20).nullable();
     table.boolean("is_admin").notNullable().defaultTo(false);
+    table.string("reset_token", 255).nullable();
+    table.timestamp("reset_token_expires").nullable();
     table.timestamp("created_at").notNullable().defaultTo(knex.fn.now());
     table.timestamp("updated_at").notNullable().defaultTo(knex.fn.now());
   });
