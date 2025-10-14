@@ -10,10 +10,6 @@ const {
 const createUnit = async (req, res) => {
   try {
     const data = req.body;
-    if (!data.name || !data.abbreviation) {
-      ErrorResponse(res, "Name and abbreviation are required", 400);
-      return;
-    }
 
     const [newUnit] = await knex("units").insert(data);
 
@@ -31,6 +27,7 @@ const createUnit = async (req, res) => {
 const getAllUnits = async (req, res) => {
   try {
     const units = await knex("units").select(
+      "id",
       "name",
       "abbreviation",
       "description"
@@ -84,7 +81,7 @@ const deleteUnitById = async (req, res) => {
       ErrorResponse(res, "Unit not found", 404);
       return;
     }
-    SucessResponse(res, null, "Unit deleted successfully");
+    SucessResponse(res, deleted, "Unit deleted successfully");
   } catch (error) {
     console.error("Error deleting unit:", error);
     ErrorResponse(res, "Internal server error", 500);

@@ -5,22 +5,9 @@ const {
   responsesMessages,
 } = require("../utils/responses");
 
-//creare product
 const createProduct = async (req, res) => {
   try {
     const data = req.body;
-    if (
-      !data.name ||
-      !data.purchase_price ||
-      !data.MRP_price ||
-      !data.unit_id ||
-      !data.brand ||
-      !data.stock ||
-      !data.selling_price
-    ) {
-      ErrorResponse(res, "Name, price, and unit_id are required", 400);
-      return;
-    }
 
     const [newProduct] = await knex("products").insert(data);
 
@@ -50,10 +37,10 @@ const updateProductById = async (req, res) => {
       return;
     }
     const updatedProduct = await knex("products").where({ id }).first();
-    SucessResponse(res, updatedProduct, "Product updated successfully");
+    SucessResponse(res, updatedProduct, responsesMessages.PRODUCT_UPDATED);
   } catch (error) {
     console.error("Error updating product:", error);
-    ErrorResponse(res, "Internal server error", 500);
+    ErrorResponse(res, responsesMessages.ISE, 500);
   }
 };
 
@@ -67,10 +54,10 @@ const deleteProductById = async (req, res) => {
       ErrorResponse(res, "Product not found", 404);
       return;
     }
-    SucessResponse(res, null, "Product deleted successfully");
+    SucessResponse(res, deleted, responsesMessages.PRODUCT_DELETED);
   } catch (error) {
     console.error("Error deleting product:", error);
-    ErrorResponse(res, "Internal server error", 500);
+    ErrorResponse(res, responsesMessages.ISE, 500);
   }
 };
 
@@ -84,7 +71,7 @@ const getProductById = async (req, res) => {
       ErrorResponse(res, "Product not found", 404);
       return;
     }
-    SucessResponse(res, get, "Product got successfully");
+    SucessResponse(res, get, responsesMessages.PRODUCT_SHOWN);
   } catch (error) {
     console.error("Error got product:", error);
     ErrorResponse(res, "Internal server error", 500);
@@ -98,10 +85,10 @@ const getAllProducts = async (req, res) => {
       ErrorResponse(res, "Product not found", 404);
       return;
     }
-    SucessResponse(res, fetch, "Product fetching successfully");
+    SucessResponse(res, fetch, responsesMessages.PRODUCT_LIST);
   } catch (error) {
     console.error("Error fetch product:", error);
-    ErrorResponse(res, "Internal server error", 500);
+    ErrorResponse(res, responsesMessages.ISE, 500);
   }
 };
 
@@ -112,30 +99,3 @@ module.exports = {
   getProductById,
   getAllProducts,
 };
-
-/*
-impotant fields:
-- name
-- brand
-- stock
-- image_url
-- short_description
-- full_description
-- unit_id (foreign key to units table)
-- product_details (JSON for attributes like color, size)
-- purchase_price
-- MRP_price
-- discount
-- tax
-- selling_price
-- category_ids (JSON array of category IDs)
-- created_at
-- updated_at
- */
-
-/*
-manitory fields:
-- name
-- price
-- unit_id 
-*/

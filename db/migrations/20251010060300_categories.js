@@ -3,6 +3,7 @@ exports.up = function (knex) {
     table.increments("id").primary();
     table.string("name").notNullable();
     table.string("slug").unique();
+    table.timestamp("created_at").defaultTo(knex.fn.now());
   });
 };
 

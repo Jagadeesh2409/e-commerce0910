@@ -15,12 +15,16 @@ exports.up = function (knex) {
       .onDelete("SET NULL");
     table.json("product_details"); // store details like { color: "red", size: "M" }
     table.decimal("purchase_price", 10, 2);
-    table.decimal("MRP_price", 10, 2);
+    table.decimal("MRP", 10, 2);
     table.decimal("selling_price", 10, 2);
     table.enum("discount_type", ["percentage", "flat"]).defaultTo("flat");
     table.decimal("discount", 5, 2);
     table.decimal("tax", 5, 2);
-    table.json("category_ids"); // store multiple category IDs like [1,2,3]
+    table
+      .integer("category_id")
+      .unsigned()
+      .references("id")
+      .inTable("categories");
     table.timestamp("created_at").defaultTo(knex.fn.now());
     table.timestamp("updated_at").defaultTo(knex.fn.now());
   });

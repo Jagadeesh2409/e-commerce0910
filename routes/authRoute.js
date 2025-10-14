@@ -1,15 +1,19 @@
 const express = require("express");
-const authRoute = express.Router();
+const router = express.Router();
+
 const { register, login } = require("../controllers/authController");
 const {
   forgotPassword,
   resetPassword,
 } = require("../controllers/passwordController");
 
-authRoute.post("/forgot-password", forgotPassword);
-authRoute.post("/reset-password", resetPassword);
+const validator = require("express-joi-validation").createValidator({});
+const { loginV, registerV } = require("../middleware/validator");
 
-authRoute.post("/register", register);
-authRoute.post("/login", login);
+router.post("/forgot-password", forgotPassword);
+router.post("/reset-password", resetPassword);
 
-module.exports = authRoute;
+router.post("/register", validator.body(registerV), register);
+router.post("/login", validator.body(loginV), login);
+
+module.exports = router;

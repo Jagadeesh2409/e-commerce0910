@@ -7,11 +7,15 @@ const {
   getAllProducts,
   getProductById,
 } = require("../controllers/productController");
+const { adminAuth } = require("../middleware/authMiddleware");
 
-router.post("/", createProduct);
-router.put("/:id", updateProductById);
-router.delete("/:id", deleteProductById);
-router.get("/:id", getProductById);
-router.get("/:id", getAllProducts);
+const validator = require("express-joi-validation").createValidator({});
+const { product } = require("../middleware/validator");
+
+router.post("/", adminAuth, validator.body(product), createProduct);
+router.put("/:id", adminAuth, updateProductById);
+router.delete("/:id", adminAuth, deleteProductById);
+router.get("/:id", adminAuth, getProductById);
+router.get("/", adminAuth, getAllProducts);
 
 module.exports = router;
