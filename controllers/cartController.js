@@ -5,11 +5,16 @@ const {
   responsesMessages,
 } = require("../utils/responses");
 
-const addCart = async (req, res) => {
+const { getCartDetails } = require("../utils/cartUtil");
+
+const addToCart = async (req, res) => {
   const user_id = req.user.id;
   const { product_id } = req.body;
 
   try {
+    const product = await knex("products").where({ id: product_id }).first();
+    if (!product) return res.status(404).json({ message: "Product not found" });
+
     const exist = await knex("cart_items")
       .where({ user_id, product_id })
       .first();
@@ -17,83 +22,82 @@ const addCart = async (req, res) => {
     if (exist) {
       await knex("cart_items")
         .where({ user_id, product_id })
-        .update({ quantity: exist.quantity + 1 });
-
-      return SucessResponse(res, null, responsesMessages.CART_UPDATED);
+        .update({
+          quantity: exist.quantity + 1,
+          updated_at: knex.fn.now(),
+        });
+    } else {
+      await knex("cart_items").insert({
+        user_id,
+        product_id,
+        quantity: 1,
+      });
     }
 
-    const [insertedId] = await knex("cart_items").insert({
-      user_id,
-      product_id,
-      quantity: 1,
-    });
+    const updatedCart = await getCartDetails(user_id);
 
-    const newCartItem = await knex("cart_items")
-      .where({ id: insertedId })
-      .first();
-    SucessResponse(res, newCartItem, responsesMessages.CART_ADDED);
-  } catch (error) {
-    console.error("Error in cart add:", error);
-    ErrorResponse(res, responsesMessages.ISE);
+    res.json({
+      message: "Cart updated successfully",
+      cart: updatedCart,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 };
 
-const deleteCart = async (req, res) => {
+const removeFromCart = async (req, res) => {
   const user_id = req.user.id;
-  const { id } = req.params;
-  const data = req.body;
-  const product_id = id;
+  const { product_id, empty } = req.body;
 
   try {
+    if (empty === true) {
+      await knex("cart_items").where({ user_id }).del();
+      return res.json({
+        message: "Cart emptied successfully",
+        cart: [],
+      });
+    }
+
     const exist = await knex("cart_items")
       .where({ user_id, product_id })
       .first();
 
-    if (!exist) {
-      return ErrorResponse(res, "Item not found in cart", 404);
-    }
+    if (!exist)
+      return res.status(404).json({ message: "Product not found in cart" });
 
-    if (exist.quantity === 1 || data.empty) {
-      const data = await knex("cart_items")
+    if (exist.quantity > 1) {
+      await knex("cart_items")
         .where({ user_id, product_id })
-        .del();
-      return SucessResponse(res, data, responsesMessages.CART_REMOVED);
+        .update({
+          quantity: exist.quantity - 1,
+          updated_at: knex.fn.now(),
+        });
+    } else {
+      await knex("cart_items").where({ user_id, product_id }).del();
     }
 
-    await knex("cart_items")
-      .where({ user_id, product_id })
-      .update({ quantity: exist.quantity - 1 });
+    const updatedCart = await getCartDetails(user_id);
 
-    SucessResponse(res, null, responsesMessages.CART_UPDATED);
-  } catch (error) {
-    console.error("Error in deleting cart:", error);
-    ErrorResponse(res, responsesMessages.ISE);
+    res.json({
+      message: "Cart updated successfully",
+      cart: updatedCart,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 };
 
-const listCart = async (req, res) => {
+const viewCart = async (req, res) => {
   const user_id = req.user.id;
-
   try {
-    const data = await knex("cart_items as c")
-      .join("products as p", "c.product_id", "p.id")
-      .where("c.user_id", user_id)
-      .select(
-        "c.product_id",
-        "c.quantity",
-        "p.selling_price as price",
-        knex.raw("(c.quantity * p.selling_price) as total_price")
-      );
-
-    if (data.length === 0) {
-      return ErrorResponse(res, "Your cart is empty", 404);
-    }
-
-    SucessResponse(res, data, responsesMessages.CART_LIST);
-  } catch (error) {
-    console.error("Problem in listCart:", error);
-    ErrorResponse(res, responsesMessages.ISE);
+    const cart = await getCartDetails(user_id);
+    res.json({
+      message: cart.length ? "Cart fetched successfully" : "Cart is empty",
+      cart,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 };
 
-module.exports = { addCart, deleteCart, listCart };
+module.exports = { addToCart, removeFromCart, viewCart };

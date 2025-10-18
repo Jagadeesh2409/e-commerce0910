@@ -13,7 +13,7 @@ exports.up = function (knex) {
       .references("id")
       .inTable("units")
       .onDelete("SET NULL");
-    table.json("product_details"); // store details like { color: "red", size: "M" }
+    table.json("product_details");
     table.decimal("purchase_price", 10, 2);
     table.decimal("MRP", 10, 2);
     table.decimal("selling_price", 10, 2);

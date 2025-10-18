@@ -14,7 +14,6 @@ const { product } = require("../middleware/validator");
 
 router.post("/", adminAuth, validator.body(product), createProduct);
 router.put("/:id", adminAuth, updateProductById);
-router.delete("/:id", adminAuth, deleteProductById);
 router.get("/:id", adminAuth, getProductById);
 router.get("/", adminAuth, getAllProducts);
 

@@ -68,22 +68,10 @@ const updateUnitById = async (req, res) => {
     }
     SucessResponse(res, { id, ...data }, "Unit updated successfully");
   } catch (error) {
-    console.error("Error updating unit:", error);
-    ErrorResponse(res, "Internal server error", 500);
-  }
-};
-
-const deleteUnitById = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const deleted = await knex("units").where({ id }).del();
-    if (!deleted) {
-      ErrorResponse(res, "Unit not found", 404);
-      return;
+    if (error.code === "ER_DUP_ENTRY") {
+      ErrorResponse(res, "this name already exist");
     }
-    SucessResponse(res, deleted, "Unit deleted successfully");
-  } catch (error) {
-    console.error("Error deleting unit:", error);
+    console.error("Error updating unit:", error);
     ErrorResponse(res, "Internal server error", 500);
   }
 };
@@ -93,5 +81,4 @@ module.exports = {
   getAllUnits,
   getUnitById,
   updateUnitById,
-  deleteUnitById,
 };

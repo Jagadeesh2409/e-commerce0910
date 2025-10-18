@@ -17,6 +17,9 @@ const addProductCategories = async (req, res) => {
       .first();
     SucessResponse(res, newCategory, "Category added successfully");
   } catch (error) {
+    if (error.code === "ER_DUP_ENTRY") {
+      return ErrorResponse(res, " this name already exists", 400);
+    }
     console.error("Error in addProductCategories:", error);
     ErrorResponse(res, "Error adding category", 400);
   }

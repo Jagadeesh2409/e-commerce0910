@@ -1,20 +1,24 @@
 const Joi = require("joi");
 
 const registerV = Joi.object({
-  name: Joi.string().required(),
-  email: Joi.string().required(),
-  password: Joi.string().required(),
-  phone_number: Joi.number(),
+  name: Joi.string().alphanum().min(3).max(16).required(),
+  email: Joi.string()
+    .email({ minDomainSegments: 2, tlds: { allow: ["com", "net"] } })
+    .required(),
+  password: Joi.string().pattern(new RegExp("^[a-z0-9]{3,30}$")),
+  phone_number: Joi.number().positive().max(10).required(),
 });
 
 const loginV = Joi.object({
-  email: Joi.string().required(),
-  password: Joi.string().required(),
+  email: Joi.string()
+    .email({ minDomainSegments: 2, tlds: { allow: ["com", "net"] } })
+    .required(),
+  password: Joi.string().max(30).required(),
 });
 
 const unit = Joi.object({
-  name: Joi.string().required(),
-  abbreviation: Joi.string().required(),
+  name: Joi.string().max(5).required(),
+  abbreviation: Joi.string().max(21).required(),
   description: Joi.string(),
 });
 
@@ -45,4 +49,76 @@ const cart = Joi.object({
   quantity: Joi.number().integer().min(1).default(1),
 });
 
-module.exports = { loginV, registerV, unit, product, category, cart };
+const pincode = Joi.object({
+  pincode: Joi.number().required(),
+  city: Joi.string().required(),
+  state: Joi.string().required(),
+  country: Joi.string().required(),
+  is_serviceable: Joi.boolean(),
+});
+
+const address = Joi.object({
+  label: Joi.string(),
+  pin_code: Joi.number().required(),
+  street: Joi.string().required(),
+  landmark: Joi.string().required(),
+  house_no: Joi.string().required(),
+  phone_number: Joi.number().required(),
+  is_default: Joi.bool(),
+});
+
+const addCartSchema = Joi.object({
+  product_id: Joi.number().integer().required(),
+  quantity: Joi.number().integer().min(1).optional().default(1),
+});
+
+const removeCartSchema = Joi.object({
+  product_id: Joi.number().integer().optional(),
+  empty: Joi.boolean().optional().default(false),
+});
+
+const checkoutSchema = Joi.object({
+  address_id: Joi.number().integer().required(),
+  flat_discount: Joi.number().min(0).optional().default(0),
+});
+
+const initiatePaymentSchema = Joi.object({
+  order_id: Joi.number().integer().required(),
+  payment_method: Joi.string()
+    .valid(
+      "Cash on Delivery",
+      "Credit Card",
+      "Debit Card",
+      "UPI",
+      "Net Banking"
+    )
+    .required(),
+});
+
+const verifyPaymentSchema = Joi.object({
+  razorpay_order_id: Joi.string().required(),
+  razorpay_payment_id: Joi.string().required(),
+  razorpay_signature: Joi.string().required(),
+});
+
+const updateOrderStatusSchema = Joi.object({
+  status: Joi.string()
+    .valid("Pending", "Paid", "Shipped", "Delivered", "Cancelled")
+    .required(),
+});
+
+module.exports = {
+  loginV,
+  registerV,
+  unit,
+  product,
+  category,
+  pincode,
+  address,
+  addCartSchema,
+  removeCartSchema,
+  checkoutSchema,
+  initiatePaymentSchema,
+  verifyPaymentSchema,
+  updateOrderStatusSchema,
+};

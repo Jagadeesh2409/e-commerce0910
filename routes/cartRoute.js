@@ -3,16 +3,16 @@ const router = express.Router();
 const Validator = require("express-joi-validation").createValidator({});
 
 const {
-  addCart,
-  deleteCart,
-  listCart,
+  addToCart,
+  removeFromCart,
+  viewCart,
 } = require("../controllers/cartController");
 
 const { auth } = require("../middleware/authMiddleware");
-const { cart } = require("../middleware/validator");
+const { addCartSchema, removeCartSchema } = require("../middleware/validator");
 
-router.post("/", auth, Validator.body(cart), addCart);
-router.delete("/:id", auth, deleteCart);
-router.get("/", auth, listCart);
+router.post("/", auth, Validator.body(addCartSchema), addToCart);
+router.delete("/", auth, Validator.body(removeCartSchema), removeFromCart);
+router.get("/", auth, viewCart);
 
 module.exports = router;
