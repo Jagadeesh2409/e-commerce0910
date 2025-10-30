@@ -14,6 +14,11 @@ passport.use(
     async (accessToken, refreshToken, profile, done) => {
       try {
         // Check if user already exists
+        console.log("✅ Google login successful!");
+        console.log("👤 Google Profile ID:", profile.id);
+        console.log("📧 Email:", profile.emails?.[0]?.value);
+        console.log("🧑‍💻 Display Name:", profile.displayName);
+       
         let user = await knex("users")
           .where({ google_id: profile.id })
           .first();
@@ -36,7 +41,6 @@ passport.use(
         const token = jwt.sign(
           { id: user.id, email: user.email },
           process.env.JWT_SECRET,
-          { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
         );
 
         // Attach token to user object
