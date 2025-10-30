@@ -5,6 +5,7 @@ exports.up = function (knex) {
     table.string("city", 255).notNullable();
     table.string("state", 255).notNullable();
     table.string("country", 255).notNullable();
+    table.boolean("is_deleted").defaultTo(false);
     table.boolean("is_serviceable").defaultTo(true);
     table.timestamp("created_at").defaultTo(knex.fn.now());
   });

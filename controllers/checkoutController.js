@@ -1,6 +1,7 @@
 const knex = require("../db/knexConfig");
 const { v4: uuidv4 } = require("uuid");
 const { getCartDetails } = require("../utils/cartUtil"); // your existing function
+const _ = require("lodash")
 
 const checkoutOrder = async (req, res) => {
   const user_id = req.user.id;
@@ -8,15 +9,14 @@ const checkoutOrder = async (req, res) => {
 
   try {
     const cartSummary = await getCartDetails(user_id);
+    console.log(cartSummary.products)
 
-    if (!cartSummary.products.length)
-      return res.status(400).json({ message: "Your cart is empty" });
+    if (!cartSummary.products.length) return res.status(400).json({ message: "Your cart is empty" });
 
-    if (cartSummary.grand_total < parseFloat(flat_discount)) {
-    } else {
-      const grandTotal =
-        parseFloat(cartSummary.grand_total) - parseFloat(flat_discount);
-    }
+
+    const grandTotal =
+      parseFloat(cartSummary.grand_total) - parseFloat(flat_discount);
+
 
     const year = new Date().getFullYear();
     const invoice_no = `INV-${year}-${uuidv4().slice(0, 6).toUpperCase()}`;
@@ -33,11 +33,19 @@ const checkoutOrder = async (req, res) => {
       created_at: knex.fn.now(),
     });
 
-    const finalItems = cartSummary.products.map((item) => ({
-      ...item,
-      order_id,
-      created_at: knex.fn.now(),
-    }));
+    const finalItems = cartSummary.products.map((item) => {
+      return {
+        product_id: item.product_id,
+        name: item.name,
+        quantity: item.quantity,
+        price: parseFloat(item.price),      
+        tax: parseFloat(item.tax),
+        discount: parseFloat(item.discount),
+        total: parseFloat(item.total_price), 
+        order_id
+      };
+    });
+
 
     await knex("order_items").insert(finalItems);
 

@@ -5,8 +5,8 @@ const registerV = Joi.object({
   email: Joi.string()
     .email({ minDomainSegments: 2, tlds: { allow: ["com", "net"] } })
     .required(),
-  password: Joi.string().pattern(new RegExp("^[a-z0-9]{3,30}$")),
-  phone_number: Joi.number().positive().max(10).required(),
+  password: Joi.string(),
+  phone_number: Joi.number().positive().required(),
 });
 
 const loginV = Joi.object({

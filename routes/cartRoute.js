@@ -16,3 +16,4 @@ router.delete("/", auth, Validator.body(removeCartSchema), removeFromCart);
 router.get("/", auth, viewCart);
 
 module.exports = router;
+

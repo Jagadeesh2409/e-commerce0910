@@ -8,10 +8,10 @@ const {
   removeCategoriesById,
   listProductCategories,
 } = require("../controllers/categoriesController");
-const { adminAuth } = require("../middleware/authMiddleware");
+const { adminAuth,auth} = require("../middleware/authMiddleware");
 
 router.post("/", adminAuth, validator.body(category), addProductCategories);
 router.delete("/:id", adminAuth, removeCategoriesById);
-router.get("/", adminAuth, listProductCategories);
+router.get("/", listProductCategories);
 
 module.exports = router;

@@ -24,7 +24,8 @@ exports.up = function (knex) {
       .integer("category_id")
       .unsigned()
       .references("id")
-      .inTable("categories");
+      .inTable("categories").onDelete("SET NULL");
+    table.boolean("is_deleted").defaultTo(false);
     table.timestamp("created_at").defaultTo(knex.fn.now());
     table.timestamp("updated_at").defaultTo(knex.fn.now());
   });

@@ -1,38 +1,7 @@
 // controllers/deliveryController.js
 const knex = require("../db/knexConfig");
 
-// 🧭 Update Order Status (Admin or Delivery Staff)
-const updateOrderStatus = async (req, res) => {
-  const { order_id, status } = req.body;
-  const validStatuses = [
-    "Pending",
-    "Paid",
-    "Shipped",
-    "Delivered",
-    "Cancelled",
-  ];
 
-  try {
-    if (!validStatuses.includes(status)) {
-      return res.status(400).json({ message: "Invalid status value" });
-    }
-
-    const exist = await knex("orders").where({ id: order_id }).first();
-    if (!exist) return res.status(404).json({ message: "Order not found" });
-
-    await knex("orders").where({ id: order_id }).update({
-      status,
-      updated_at: knex.fn.now(),
-    });
-
-    res.json({ message: `Order status updated to ${status}` });
-  } catch (error) {
-    console.error("Update Order Status Error:", error);
-    res.status(500).json({ error: error.message });
-  }
-};
-
-// 👀 Get Delivery/Tracking Status (Customer)
 const getOrderTracking = async (req, res) => {
   const { order_id } = req.params;
   const user_id = req.user.id;
@@ -58,4 +27,4 @@ const getOrderTracking = async (req, res) => {
   }
 };
 
-module.exports = { updateOrderStatus, getOrderTracking };
+module.exports = { getOrderTracking };

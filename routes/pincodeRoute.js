@@ -13,4 +13,6 @@ router.post("/", adminAuth, validator.body(pincode), createPincode);
 router.get("/", adminAuth, getAllPincodes);
 router.put("/:id", adminAuth, updatePincode);
 
+
 module.exports = router;
+

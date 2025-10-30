@@ -1,4 +1,6 @@
 const knex = require("../db/knexConfig");
+
+
 const {
   SucessResponse,
   ErrorResponse,
@@ -41,7 +43,6 @@ const updateProductById = async (req, res) => {
       return;
     }
     const updatedProduct = await knex("products").where({ id }).first();
-
     SucessResponse(res, updatedProduct, responsesMessages.PRODUCT_UPDATED);
   } catch (error) {
     console.error("Error updating product:", error);

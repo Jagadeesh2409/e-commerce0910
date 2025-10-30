@@ -59,7 +59,7 @@ const getCartDetails = async (user_id) => {
       name: item.name,
       image_url: item.image_url,
       price: selling_price.toFixed(2),
-      actual_price: selling_price.toFixed(2),
+      purchase_price: selling_price.toFixed(2),
       offer_price: offerPrice.toFixed(2),
       discount: discount.toFixed(2),
       discount_type: item.discount_type,

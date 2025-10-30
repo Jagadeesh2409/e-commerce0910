@@ -23,7 +23,7 @@ const generateInvoice = async (req, res) => {
         "order_items.price",
         "order_items.discount",
         "order_items.tax",
-        "order_items.total_price"
+        "order_items.total"
       )
       .where("order_items.order_id", order_id);
 
@@ -65,17 +65,17 @@ const generateInvoice = async (req, res) => {
         .moveDown(0.5)
         .text(item.name, 50)
         .text(item.quantity, 250)
-        .text(item.price.toFixed(2), 320)
-        .text(item.total_price.toFixed(2), 420);
+        .text(item.price, 320)
+        .text(item.total_price, 420);
     });
 
     doc.moveDown(2);
-    doc.text(`Subtotal: ₹${subtotal.toFixed(2)}`, { align: "right" });
-    doc.text(`Tax: ₹${(order.tax || 0).toFixed(2)}`, { align: "right" });
-    doc.text(`Discount: ₹${(order.discount || 0).toFixed(2)}`, {
+    doc.text(`Subtotal: ₹${subtotal}`, { align: "right" });
+    doc.text(`Tax: ₹${(order.tax || 0)}`, { align: "right" });
+    doc.text(`Discount: ₹${(order.discount || 0)}`, {
       align: "right",
     });
-    doc.text(`Grand Total: ₹${(order.total_price || 0).toFixed(2)}`, {
+    doc.text(`Grand Total: ₹${(order.total_price || 0)}`, {
       align: "right",
     });
 

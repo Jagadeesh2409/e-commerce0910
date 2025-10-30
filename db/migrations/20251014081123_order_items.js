@@ -16,6 +16,7 @@ exports.up = function (knex) {
     table.decimal("tax", 10, 2);
     table.decimal("discount", 10, 2);
     table.decimal("total", 8, 2).notNullable();
+    table.boolean("is_deleted").defaultTo(false);
 
     table
       .integer("order_id")
@@ -31,3 +32,4 @@ exports.up = function (knex) {
 exports.down = function (knex) {
   return knex.schema.dropTable("order_items");
 };
+

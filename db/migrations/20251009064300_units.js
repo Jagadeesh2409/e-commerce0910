@@ -4,6 +4,7 @@ exports.up = function (knex) {
     table.string("name").notNullable().unique();
     table.string("abbreviation").notNullable();
     table.string("description");
+    table.boolean("is_deleted").defaultTo(false);
     table.timestamp("created_at").defaultTo(knex.fn.now());
     table.timestamp("updated_at").defaultTo(knex.fn.now());
   });

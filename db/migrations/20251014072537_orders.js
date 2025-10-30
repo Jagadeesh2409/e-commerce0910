@@ -65,7 +65,7 @@ exports.up = function (knex) {
       .enu("status", ["Pending", "Paid", "Shipped", "Delivered", "Cancelled"])
       .nullable()
       .defaultTo("Pending");
-
+    table.boolean("is_deleted").defaultTo(false);
     table.timestamp("created_at").defaultTo(knex.fn.now());
     table.timestamp("updated_at").defaultTo(knex.fn.now());
   });

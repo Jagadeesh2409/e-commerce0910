@@ -71,7 +71,7 @@ const getOrderHistory = async (req, res) => {
         "i.price",
         "i.discount",
         "i.tax",
-        "i.total_price as item_total"
+        "i.total as item_total"
       );
 
     if (!orders.length)
