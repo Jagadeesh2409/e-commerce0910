@@ -1,20 +1,17 @@
 const express = require("express");
 const app = express();
 const authRoute = require("./routes/authRoute");
-const session = require("express-session");
-const passport = require("passport")
+
+
+
+require("dotenv").config();
 
 app.use(express.json());
-require('./config/passport')
+app.use(express.static("public"));
 
-app.use(session({
-    secret:"secret",
-    resave:false,
-    saveUninitialized:true,
-}))
 
-app.use(passport.initialize())
-app.use(passport.session())
+
+
 
 app.use("/auth", authRoute);
 
