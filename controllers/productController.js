@@ -4,6 +4,7 @@ const {
   ErrorResponse,
   responsesMessages,
 } = require("../utils/responses");
+const XLSX = require("xlsx");
 
 const createProduct = async (req, res) => {
   try {
@@ -92,10 +93,62 @@ const getAllProducts = async (req, res) => {
   }
 };
 
+const bulkUpload = async (req, res, next) => {
+  try {
+    let path = req.file.path;
+    var workbook = XLSX.readFile(path);
+    var sheet_name_list = workbook.SheetNames;
+    let jsonData = XLSX.utils.sheet_to_json(
+      workbook.Sheets[sheet_name_list[0]]
+    );
+
+    if (jsonData.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "xml sheet has no data",
+      });
+    }
+
+    const chunkSize = 100;
+
+    knex
+      .batchInsert("products", jsonData, chunkSize)
+      .then(function (ids) {
+        console.log(ids);
+          return res.status(201).json({
+          success: true,
+          message:ids+ " rows added to the database",
+        });
+      })
+      .catch(function (error) {
+        console.log(error.message);
+      });
+
+    
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+const getBulkData = async (req, res) => {
+  try {
+    const { categories } = req.body || {};
+    let data;
+    categories
+      ? (data = await knex("products").select("*").where("categories"))
+      : (data = await knex("products").select("*"));
+    res.status(200).json({ message: "success", data });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
 module.exports = {
   createProduct,
   updateProductById,
   deleteProductById,
   getProductById,
   getAllProducts,
+  bulkUpload,
+  getBulkData,
 };
