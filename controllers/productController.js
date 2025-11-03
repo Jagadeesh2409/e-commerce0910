@@ -4,12 +4,22 @@ const {
   ErrorResponse,
   responsesMessages,
 } = require("../utils/responses");
+const _ = require('lodash');
+const fs = require("fs");
 const XLSX = require("xlsx");
 
+//slug creator
+function createSlug(name) {
+  return _.kebabCase(name);  
+}
+const {exportFailedRows,readExcelToJson} = require('../utils/excel')
+
+
+//create product
 const createProduct = async (req, res) => {
   try {
     const data = req.body;
-
+    data.slug = createSlug(`${data.name} ${data.brand}`)
     const [newProduct] = await knex("products").insert(data);
 
     SucessResponse(
@@ -26,6 +36,8 @@ const createProduct = async (req, res) => {
   }
 };
 
+
+//update product by id
 const updateProductById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -45,12 +57,15 @@ const updateProductById = async (req, res) => {
   }
 };
 
+
+
+//delete product by id
 const deleteProductById = async (req, res) => {
   try {
     const { id } = req.params;
     const data = req.body;
 
-    const deleted = await knex("products").where({ id }).del();
+    const deleted = await knex("products").update({is_delete:false}).where({ id });
     if (!deleted) {
       ErrorResponse(res, "Product not found", 404);
       return;
@@ -62,6 +77,22 @@ const deleteProductById = async (req, res) => {
   }
 };
 
+
+//get all product details
+const  getAllProducts = async(req,res)=>{
+  try {
+    const data = await knex('products').select('*')
+    res.status(200).json({data})
+    
+  } catch (error) {
+    res.status(400).json({success:"failed",message:error.message})
+    
+  }
+}
+
+
+
+//get product by id
 const getProductById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -79,67 +110,182 @@ const getProductById = async (req, res) => {
   }
 };
 
-const getAllProducts = async (req, res) => {
-  try {
-    const fetch = await knex("products").select("*");
-    if (!fetch) {
-      ErrorResponse(res, "Product not found", 404);
-      return;
-    }
-    SucessResponse(res, fetch, responsesMessages.PRODUCT_LIST);
-  } catch (error) {
-    console.error("Error fetch product:", error);
-    ErrorResponse(res, responsesMessages.ISE, 500);
-  }
-};
 
-const bulkUpload = async (req, res, next) => {
+
+//bulk upload
+const bulkupload = async (req, res) => {
   try {
-    let path = req.file.path;
-    var workbook = XLSX.readFile(path);
-    var sheet_name_list = workbook.SheetNames;
-    let jsonData = XLSX.utils.sheet_to_json(
-      workbook.Sheets[sheet_name_list[0]]
+    // --- Setup SSE headers ---
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+
+    const filePath = req.file.path;
+    const jsonData = readExcelToJson(filePath);
+    const chunkSize = 500;
+    const total = jsonData.length;
+    let processed = 0;
+    const failedRows = [];
+
+    // --- Split data into chunks (no loops) ---
+    const chunks = Array.from(
+      { length: Math.ceil(total / chunkSize) },
+      (_, i) => jsonData.slice(i * chunkSize, (i + 1) * chunkSize)
     );
 
-    if (jsonData.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: "xml sheet has no data",
-      });
+    // --- Chunk processor (returns Promise) ---
+    const processChunk = async (chunk) =>
+      Promise.allSettled(
+        chunk.map(async (row) => {
+          try {
+            await knex("products").insert(row);
+            processed++;
+
+            const progress = Math.round((processed / total) * 100);
+
+            // ✅ Send progress as SSE message
+            res.write(`data: Progress: ${progress}% (${processed}/${total})\n\n`);
+            console.log(`Progress: ${progress}% (${processed}/${total})`);
+          } catch (err) {
+           
+            console.error("❌ Failed insert:", row.name, "Reason:",responsesMessages[err.code]  );
+            failedRows.push({ ...row, error: responsesMessages[err.code] });
+          }
+        })
+      );
+    
+    // --- Sequentially process chunks ---
+    await chunks.reduce(
+      (chain, chunk) => chain.then(() => processChunk(chunk)),
+      Promise.resolve()
+    );
+
+    // --- Handle failed rows ---
+    if (failedRows.length > 0) {
+      const failedFile = exportFailedRows(failedRows);
+      res.write(`data: ${JSON.stringify({failedFile,data:`✅ ${processed} inserted successfully.`,failedRows:failedRows.length,failedData:failedRows})}\n\n`);
+      res.end();
+      return;
     }
 
-    const chunkSize = 100;
-
-    knex
-      .batchInsert("products", jsonData, chunkSize)
-      .then(function (ids) {
-        console.log(ids);
-          return res.status(201).json({
-          success: true,
-          message:ids+ " rows added to the database",
-        });
-      })
-      .catch(function (error) {
-        console.log(error.message);
-      });
-
-    
+    // --- Final success message ---
+    res.write(`data: ✅ ${processed} rows inserted successfully.\n\n`);
+    res.write("data: Upload completed!\n\n");
+    res.end();
   } catch (err) {
-    return res.status(500).json({ success: false, message: err.message });
+    console.error("❌ Insert Error:", err.message);
+    res.write(`data: Error: ${err.message}\n\n`);
+    res.end();
   }
 };
 
-const getBulkData = async (req, res) => {
+
+const bulkUpdate = async (req, res) => {
   try {
-    const { categories } = req.body || {};
-    let data;
-    categories
-      ? (data = await knex("products").select("*").where("categories"))
-      : (data = await knex("products").select("*"));
-    res.status(200).json({ message: "success", data });
-  } catch (error) {
-    console.log(error);
+
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+
+    const filePath = req.file.path;
+    const jsonData = readExcelToJson(filePath);
+    const chunkSize = 500;
+    const total = jsonData.length;
+    let processed = 0;
+    const failedRows = [];
+
+    const chunks = Array.from(
+      { length: Math.ceil(total / chunkSize) },
+      (_, i) => jsonData.slice(i * chunkSize, (i + 1) * chunkSize)
+    );
+
+    const processChunk = async (chunk) =>
+      Promise.allSettled(
+        chunk.map(async (row) => {
+          try {
+            await knex("products").where("name", row.name).update(row);
+            processed++;
+            const progress = Math.round((processed / total) * 100);
+            res.write(`data: Progress: ${progress}% (${processed}/${total})\n\n`);
+            console.log(`Progress: ${progress}% (${processed}/${total})`);
+          } catch (err) {
+            console.error("❌ Failed insert:", row.name, "Reason:",responsesMessages[err.code]  );
+            failedRows.push({ ...row, error: responsesMessages[err.code] });
+          }
+        })
+      );
+
+    await chunks.reduce(
+      (chain, chunk) => chain.then(() => processChunk(chunk)),
+      Promise.resolve()
+    );
+
+    console.log(failedRows)
+    if (failedRows.length > 0) {
+      const failedFile = exportFailedRows(failedRows);
+      res.write(`data: ${JSON.stringify({failedFile,data:`✅ ${processed} inserted successfully.`,failedRows:failedRows.length,failedData:failedRows})}\n\n`);
+      res.end();
+      return;
+    }
+
+    //  res.write(
+    //   `data: ✅ ${JSON.stringify({
+    //     message: `${processed} records inserted successfully`,
+    //   })}\n\n`
+    // );
+    
+   
+   res.write(`data: ✅ ${processed} rows updated successfully.\n\n`);
+    res.write("data: Updated completed!\n\n");
+    res.end();
+  } catch (err) {
+    console.error("❌ Insert Error:", err.message);
+    res.write(`data: Error: ${err.message}\n\n`);
+    res.end();
+  }
+};
+
+
+const  getBulkData = async (req, res) => {
+  try {
+    // 1️⃣ Get all data from DB
+    const data = await knex("products").select("*");
+
+    if (!data || data.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No product data found to export.",
+      });
+    }
+
+    // 2️⃣ Convert JSON → Excel Sheet
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Products");
+
+    // 3️⃣ Ensure folder exists
+    const folder = "uploads/exportedProducts";
+    if (!fs.existsSync(folder)) fs.mkdirSync(folder, { recursive: true });
+
+    // 4️⃣ Create unique file name
+    const filePath = `${folder}/products_${Date.now()}.xlsx`;
+
+    // 5️⃣ Write file
+    XLSX.writeFile(wb, filePath);
+
+    // 6️⃣ Send success response
+    res.status(200).json({
+      success: true,
+      message: "All products exported successfully.",
+      file: filePath,
+    });
+  } catch (err) {
+    console.error("❌ Export Error:", err.message);
+    res.status(500).json({
+      success: false,
+      message: "Failed to export products.",
+      error: err.message,
+    });
   }
 };
 
@@ -149,6 +295,7 @@ module.exports = {
   deleteProductById,
   getProductById,
   getAllProducts,
-  bulkUpload,
   getBulkData,
+  bulkupload,
+  bulkUpdate
 };

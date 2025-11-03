@@ -42,6 +42,12 @@ const responsesMessages = {
   CART_LIST: "cart listed successfully",
 
   ISE: "Internal server error",
+  
+
+  ER_DUP_ENTRY: "This name is already present",
+  ER_BAD_FIELD_ERROR: "you are added another columns",
+  ER_NO_REFERENCED_ROW_2: " this is not applicable",
+  undefined : "name is missing"
 };
 
 module.exports = { SucessResponse, ErrorResponse, responsesMessages };

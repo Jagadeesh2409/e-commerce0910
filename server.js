@@ -6,6 +6,9 @@ const productRoute = require("./routes/productRoute");
 const categoryRoute = require("./routes/categoryRoute");
 const cartRouter = require("./routes/cartRoute");
 
+
+app.use('/uploads', express.static('uploads'));
+
 app.use(express.json());
 app.use("/api/auth", authRoute);
 app.use("/api/units", unitRoute);

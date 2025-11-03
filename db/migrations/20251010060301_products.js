@@ -1,13 +1,13 @@
 exports.up = function (knex) {
   return knex.schema.createTable("products", (table) => {
     table.increments("id").primary();
-    table.string("name").notNullable();
+    table.string("name").notNullable().unique();
     table.string("brand").notNullable();
     table.integer("stock").defaultTo(0);
     table.string("image_url");
     table.string("short_description");
     table.text("full_description");
-    table.string('slug').notNullable().unique();
+    table.string('slug');
     table
       .integer("unit_id")
       .unsigned()

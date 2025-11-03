@@ -6,8 +6,9 @@ const {
   updateProductById,
   getAllProducts,
   getProductById,
-  bulkUpload,
-  getBulkData
+  getBulkData,
+  bulkupload,
+  bulkUpdate
 } = require("../controllers/productController");
 const { adminAuth } = require("../middleware/authMiddleware");
 
@@ -21,6 +22,8 @@ router.put("/:id", adminAuth, updateProductById);
 router.delete("/:id", adminAuth, deleteProductById);
 router.get("/:id", adminAuth, getProductById);
 router.get("/", adminAuth, getAllProducts);
-router.post("/bulkupload",upload.single("product"),bulkUpload)
+router.post("/bulkupload",upload.single("product"),bulkupload)
+router.post("/bulkupdate",upload.single("product"),bulkUpdate)
+
 
 module.exports = router;
