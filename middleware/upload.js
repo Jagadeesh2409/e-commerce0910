@@ -14,8 +14,17 @@ const storage = multer.diskStorage({
       case "media":
         folder = "uploads/media";
         break;
+      case "productupload":
+        folder = "uploads/product";
+        break;
       case "product":
         folder = "uploads/products";
+        break;
+      case "orders":
+        folder = "uploads/orders";
+        break;
+      case "ordersupdate":
+        folder = "uploads/ordersupdate";
         break;
     }
 
@@ -25,10 +34,10 @@ const storage = multer.diskStorage({
   },
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname);
+    console.log(ext)
     cb(null, `${uuidv4()}${ext}`);
   },
 });
-
 const fileFilter = (req, file, cb) => {
   const allowedTypes = [
     "image/jpeg",
@@ -37,6 +46,8 @@ const fileFilter = (req, file, cb) => {
     "video/mp4",
     "audio/mpeg",
     "application/pdf",
+    "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
   ];
   if (allowedTypes.includes(file.mimetype)) cb(null, true);
   else cb(new Error("Unsupported file type"), false);
@@ -45,3 +56,9 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({ storage, fileFilter });
 
 module.exports = upload;
+
+
+
+
+
+
