@@ -20,7 +20,7 @@ const checker = (req, res, next) => {
   return next();
 };
 
-router.get("/getbulk",checker,getBulkData)
+router.get("/getbulk",adminAuth,checker,getBulkData)
 router.post("/", adminAuth, validator.body(product), createProduct);
 router.put("/:id", adminAuth, updateProductById);
 router.delete("/:id", adminAuth, deleteProductById);
@@ -28,8 +28,8 @@ router.get("/:id", adminAuth, getProductById);
 router.get("/", adminAuth, getAllProducts);
 
 
-router.post("/bulkupload", checker, upload.single("product"), bulkupload);
-router.post("/bulkupdate", checker, upload.single("productupdate"), bulkUpdate);
+router.post("/bulkupload",adminAuth ,checker, upload.single("product"), bulkupload);
+router.post("/bulkupdate", adminAuth,checker, upload.single("productupdate"), bulkUpdate);
 
 
 module.exports = router;

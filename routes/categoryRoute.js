@@ -10,7 +10,7 @@ const {
 } = require("../controllers/categoriesController");
 const { adminAuth } = require("../middleware/authMiddleware");
 
-router.post("/", addProductCategories);
+router.post("/", adminAuth,addProductCategories);
 router.delete("/:id", adminAuth, removeCategoriesById);
 router.get("/", adminAuth, listProductCategories);
 
