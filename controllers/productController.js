@@ -140,7 +140,7 @@ const bulkupload = async (req, res) => {
           try {
             await knex("products").insert(row);
             processed++;
-
+            
             const progress = Math.round((processed / total) * 100);
 
             // ✅ Send progress as SSE message
@@ -163,7 +163,7 @@ const bulkupload = async (req, res) => {
     // --- Handle failed rows ---
     if (failedRows.length > 0) {
       const failedFile = exportFailedRows(failedRows);
-      res.write(`data: ${JSON.stringify({failedFile,data:`✅ ${processed} inserted successfully.`,failedRows:failedRows.length,failedData:failedRows})}\n\n`);
+      res.write(`data: ${JSON.stringify({failedFile,data:`✅ ${processed} inserted successfully.`,failedRows:failedRows.length})}\n\n`);
       res.end();
       return;
     }
@@ -223,7 +223,7 @@ const bulkUpdate = async (req, res) => {
     console.log(failedRows)
     if (failedRows.length > 0) {
       const failedFile = exportFailedRows(failedRows);
-      res.write(`data: ${JSON.stringify({failedFile,data:`✅ ${processed} inserted successfully.`,failedRows:failedRows.length,failedData:failedRows})}\n\n`);
+      res.write(`data: ${JSON.stringify({failedFile,data:`✅ ${processed} inserted successfully.`,failedRows:failedRows.length})}\n\n`);
       res.end();
       return;
     }

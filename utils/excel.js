@@ -12,13 +12,13 @@ function readExcelToJson(filePath) {
 }
 
 
-function exportFailedRows(failedRows) {
+function exportFailedRows(failedRows,table) {
   const ws = XLSX.utils.json_to_sheet(failedRows);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "FailedRows");
-  let folder = `uploads/productFailed`
+  let folder = `uploads/${table}Failed`
   if (!fs.existsSync(folder)) fs.mkdirSync(folder, { recursive: true });
-  const outputPath = `uploads/productFailed/failed_rows_${Date.now()}.xlsx`;
+  const outputPath = `uploads/${table}Failed/failed_rows_${Date.now()}.xlsx`;
   XLSX.writeFile(wb, outputPath);
   return outputPath;
 }

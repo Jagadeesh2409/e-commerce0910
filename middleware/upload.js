@@ -15,9 +15,16 @@ const storage = multer.diskStorage({
         folder = "uploads/media";
         break;
       case "productupload":
-        folder = "uploads/productxml"
+        folder = "uploads/product";
+        break;
       case "product":
         folder = "uploads/products";
+        break;
+      case "orders":
+        folder = "uploads/orders";
+        break;
+      case "ordersupdate":
+        folder = "uploads/ordersupdate";
         break;
     }
 
@@ -27,10 +34,10 @@ const storage = multer.diskStorage({
   },
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname);
+    console.log(ext)
     cb(null, `${uuidv4()}${ext}`);
   },
 });
-
 const fileFilter = (req, file, cb) => {
   const allowedTypes = [
     "image/jpeg",
